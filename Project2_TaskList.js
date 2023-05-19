@@ -2,19 +2,23 @@
 let currentTaskList = "";
 const taskList1 = new TaskList("taskList1", []);
 currentTaskList = taskList1;
+let chooseMode = true;
 
 const priority = {
-   1: "High",
-   2: "Medium",
-   3: "Low"
+  "High" :1 ,
+  "Medium" :2 ,
+  "Low" :3 ,
 };
 
 const status = {
-   1: "New" ,
-   2: "Pending" ,
-   3: "PartialyCompleted" ,
-   4: "Completed" 
+  "New":1,
+  "Pending":2,
+  "PartialyCompleted":3,
+  "Completed":4,
 };
+
+const prioRM = ["High","Medium","Low"];
+const statRM = ["New",  "Pending",  "PartialyCompleted",  "Completed"];
 
 // ====================================  Start of the code for Handling input and output to terminal ======================= //
 
@@ -27,134 +31,140 @@ const rl = readline.createInterface({
   terminal: true
 });
 
-let chooseMode = true;
 // keypress(process.stdin);
 
-async function getInput(message) {
-  return new Promise(resolve => {
-    rl.question(message, input => {
-      resolve(input);
-    });
-  });
+function overrideInput() {
+  // Move the cursor to the beginning of the line
+  rl.write(null, { ctrl: true, name: "u" });
 }
-
-// async function enterTaskInfo() {
-//   await handleInput('Enter task name: ');
-//   await handleInput('Enter task description: ');
-// }
 
 async function takeInput(message) {
+  let input = "";
+  // rl.write('');
+  // rl.resume();
+  // rl.write('');
+  overrideInput();
   try {
-    const input = await getInput(message);
-    return input;
+    input = await new Promise(resolve => {
+      rl.question(message, userInput => {
+        //rl.write(" abc ");
+
+        resolve(userInput.trim());
+      });
+    });
   } catch (error) {
-    console.error("An error occurred:", error);
-    // rl.close();
-    // throw error;
+    console.error(error);
+  } finally {
+    //input = '';
+    
   }
+
+  return input;
 }
 
-function handleKeyPress(_, key) {
-  if (key && !isNaN(key.name) && key.name != "" && chooseMode != false) {
-    switch (key.name) {
-      case "1":
-        console.log(`You Chosed the chooise to 'Add a new task:'`);
-        enterTaskInfo();
-        break;
-      case "2":
-        console.log(`You Chosed the chooise to 'List all tasks:'`);
-        currentTaskList.listAllTasks();
-        console.log("\nChoose what to do next ");
-        break;
-      case "3":
-        console.log(`You Chosed the chooise to 'List completed tasks:'`);
-        currentTaskList.listCompletedTasks(); 
-        console.log("\nChoose what to do next ");
-        break;
-      case "4":
-        console.log(`You Chosed the chooise to 'Mark the task as done:'`);
-        currentTaskList.changeTaskStatus('complete');
-        console.log("\nChoose what to do next "); 
-        break;
-      case "5":
-        console.log(`You Chosed the chooise to 'Delete a task:'`);
-        currentTaskList.deleteTask(); 
-        console.log("\nChoose what to do next "); 
-        break;
-      case "6":
-        console.log(`You Chosed the chooise to 'Sort tasks by the due date:'`);
-        currentTaskList.sortTasks("dueDate","acs");
-        console.log("\nChoose what to do next ");
-        break;
-      case "7": 
-        console.log(`You Chosed the chooise to 'Sort tasks by priority:'`);
-        currentTaskList.sortTasks("priority","acs");
-        console.log("\nChoose what to do next ");
-        break;
-      case "8":
-        console.log(`You Chosed the chooise to 'Clear all tasks:'`);
-        currentTaskList.clearAllTasks();
-        console.log("\nChoose what to do next ");
-        break;
-      case "9":
-        console.log(`You Chosed the chooise to Quit: bye ..!`);
-        rl.close();
-        console.log("\nChoose what to do next ");
-        break;
-      default:
-        console.log(
-          `You have to choose a number (between 1 to 9) to do action as the List Above`
-        );
-        break;
+async function handleKeyPress(_, key) {
+  (async () => {
+    if (!isNaN(key.name) && key.name != "" && chooseMode != false) {
+      chooseMode = false;
+      switch (key.name) {
+        case "1":
+          console.log(`You Chosed the choice to 'Add a new task:'\n# > > `);
+          // rl.resume();
+          // rl.write("  ");
+          (async () => {
+            await enterTaskInfoAndSave();
+            chooseMode = true;
+          })();
+          break;
+        case "2":
+          console.log(`You Chosed the choice to 'List all tasks:'\n# > > `);
+          currentTaskList.listAllTasks();
+          console.log("\nChoose what to do next ");
+          chooseMode = true;
+          break;
+        case "3":
+          console.log(`You Chosed the choice to 'List completed tasks:'\n# > > `);
+
+          (async () => {
+            await currentTaskList.listCompletedTasks();
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+          break;
+        case "4":
+          console.log(`You Chosed the choice to 'Mark the task as done:'\n# > > `);
+          rl.resume();
+          rl.write("  ");
+          (async () => {
+            await currentTaskList.changeTaskStatus("complete");
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+            
+          break;
+        case "5":
+          console.log(`You Chosed the choice to 'Delete a task:'\n# > > `);
+          (async () => {
+            await currentTaskList.deleteTask();
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+          break;
+        case "6":
+          console.log(
+            `You Chosed the choice to 'Sort tasks by the due date:'\n# > > ` );
+          (async () => {
+            await currentTaskList.sortTasks("dueDate", "acs");
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+          break;
+        case "7":
+          console.log(`You Chosed the choice to 'Sort tasks by priority:'\n# > > `);
+          (async () => {
+            await currentTaskList.sortTasks("priority", "acs");
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+          break;
+        case "8":
+          console.log(`You Chosed the choice to 'Clear all tasks:'\n# > > `);
+          (async () => {
+            await currentTaskList.clearAllTasks();
+            console.log("\nChoose what to do next ");
+            chooseMode = true;
+          })();
+          break;
+        case "9":
+          console.log(`You Chosed the choice to Quit: bye ..! `);
+          rl.close();
+          break;
+          
+        default:
+          console.log(
+            `You have to choose a number (between 1 to 9) to do action as the List Above`
+          );
+          chooseMode = true;
+          break;
+      }
+    } else if (key && key.name === "enter") {
+      //&& chooseMode !== true
+      // Handle Enter key press separately
+      console.log("");
+    } else if (chooseMode == true) {
+      console.log(
+        "You have to choose a number (between 1 to 9) to do action as the List Above"
+      );
+    } else if (chooseMode == false) {
+      process.stdout.write(key.sequence);
     }
-  } else if (chooseMode == true) {
-    console.log(
-      "You have to choose a number (between 1 to 9) to do action as the List Above"
-    );
-  } else if (chooseMode == false) {
-    process.stdout.write(key.sequence);
-  }
-}
-
-async function enterTaskInfo() {
-  chooseMode = false;
-  process.stdin.pause();
-  console.log("Enter task name:");
-  process.stdin.resume();
-  const taskName = await takeInput("");
-  console.log(taskName);
-  // process.stdin.pause();
-  // process.stdin.resume();
-  console.log("Enter task Desc:");
-  const taskDesc = await takeInput("");
-  console.log(taskDesc);
-  console.log("Enter task Date(in format dd/mm/yyyy):");
-  let taskDate = "";
-  do {
-    taskDate = await takeInput("");
-  } while (!isValidDate(taskDate));
-  console.log(taskDate);
-  console.log("Enter task Priority (1 for High , 2 for Meduim, 3 for Low) :");
-  let taskPrio = "";
-  do {
-    taskPrio = await takeInput("");
-  } while (![1, 2, 3].includes(Number(taskPrio)));
-
-  console.log(taskPrio);
-
-  //add task to the tasklist
-  currentTaskList.addTask(taskName, taskDesc, taskDate, taskPrio, 1);
-  console.log(`The Task : ${taskName} is Added `);
-
-  //   process.stdin.resume();
-  //   await enterTaskInfo();
-  console.log("\nChoose what to do next ");
-  chooseMode = true;
-  //   rl.close();
+  })();
 }
 
 // Start listening for 'keypress' events
-process.stdin.on("keypress", handleKeyPress);
+(async () => {
+  process.stdin.on("keypress", handleKeyPress);
+})();
 
 process.stdin.setRawMode(true);
 process.stdin.resume();
@@ -183,16 +193,17 @@ Task.prototype.getTaskDetails = function() {
   );
   console.log(
     `TaskID:${this.id}, Task Name: ${this.name}\nDescription: ${this
-      .description}\nDue Date: ${this.dueDate}\nPriority: ${this.priority}`
+      .description}\nStatus: ${statRM[(this
+      .status-1)]}\nDue Date: ${this.dueDate}\nPriority: ${prioRM[(this.priority-1)]}`
   );
   console.log(
     "------------------------------------------------------------------"
   );
 };
 
-TaskList.prototype.addTask = function(name, desc, dueDate, priority) {
+TaskList.prototype.addTask = function(name, desc, dueDate, priority, stat) {
   if (this.tasks.length == 0) {
-    const taskObj = new Task(1, name, desc, dueDate, priority);
+    const taskObj = new Task(1, name, desc, dueDate, priority, stat);
     this.tasks.push(taskObj);
   } else {
     const taskObj = new Task(
@@ -200,18 +211,69 @@ TaskList.prototype.addTask = function(name, desc, dueDate, priority) {
       name,
       desc,
       dueDate,
-      priority
+      priority,
+      stat
     );
     this.tasks.push(taskObj);
   }
 };
 
-TaskList.prototype.listAllTasks = function() {
+async function enterTaskInfoAndSave() {
+  chooseMode = false;
+  let taskName = "";
+  let taskDesc = "";
+  // process.stdin.pause();
+  // process.stdin.resume();
+  console.log("Enter task name (minimum one 3 chars word):");
+  //
+  while (true) {
+  taskName = await takeInput("");
+  if (isValidInput(taskName)) break;
+}
+  console.log(taskName);
+  // process.stdin.pause();
+  // process.stdin.resume();
+  console.log("Enter task Desc (minimum one 3 chars word):");
+  while (true) {
+  taskDesc = await takeInput("");
+  if (isValidInput(taskDesc)) break;
+}
+  console.log(taskDesc);
+  console.log("Enter task Date(in format dd/mm/yyyy):");
+  let taskDate = "";
 
-  if (this.tasks.length>0)
-    console.log(`   There are ${this.tasks.length} task(s), here is the list for them`);
-  else
-    console.log(`there are no taskes yet, you can press 1 to create a task`);
+  while (true) {
+    taskDate = await takeInput("");
+    if (isValidDate(taskDate)) break;
+  }
+
+  console.log(taskDate);
+  console.log("Enter task Priority (1 for High , 2 for Meduim, 3 for Low) :");
+  let taskPrio = "";
+  while (true) {
+    taskPrio = await takeInput("");
+    if ([1, 2, 3].includes(Number(taskPrio))) break;
+  }
+
+  console.log(taskPrio);
+
+  //add task to the tasklist
+  currentTaskList.addTask(taskName, taskDesc, taskDate, taskPrio, 1, status[1]);
+  console.log(`The Task : ${taskName} is Added `);
+
+  //   process.stdin.resume();
+  //   await enterTaskInfo();
+  console.log("\nChoose what to do next ");
+  chooseMode = true;
+  //   rl.close();
+}
+
+TaskList.prototype.listAllTasks = function() {
+  if (this.tasks.length > 0)
+    console.log(
+      `   There are ${this.tasks.length} task(s), here is the list for them`
+    );
+  else console.log(`there are no any taskes saved, you can press 1 to create a task`);
 
   this.tasks.forEach((element, ind) => {
     console.log(ind + 1 + ":");
@@ -219,87 +281,116 @@ TaskList.prototype.listAllTasks = function() {
   });
 };
 
-TaskList.prototype.deleteTask = async function( taskId ) {
-  console.log(`Enter the id for the task you want to delete .`);
-  let elInd='';
-  const tid = await takeInput("");
-  console.log(tid);
-  do {
-      this.tasks.forEach((element,ind) => {
-    if(element.id==tid)
-      elInd=ind;
-     });
-     if(elInd=='')
-      console.log(` there is no task id with id: ${tid} please enter valid task id`);
-  } while (elInd!=='');
 
-  this.tasks.splice(elInd,1);
+TaskList.prototype.listCompletedTasks = async function() {
   
+  let i = this.tasks.reduce((i, e) => (e.status == status.Completed ? i + 1 : i), 0);
+
+  console.log(
+    i === 0
+      ? `There are no taskes that are completed`
+      : `There are ${i} tasks that they are completed. and here are the list of them :`
+  );
+
+  this.tasks.forEach((element, ind) => {
+    if (element.status == status.Completed) {
+      element.getTaskDetails();
+    }
+  });
 };
 
 
 // funcType to specify if the function to change task statues to just to make task as complete (values for argument is: change or complete)
 TaskList.prototype.changeTaskStatus = async function(funcType) {
-  console.log(`Enter the id for the task which you want to change its statues ${funcType=='complete'?'to complete':''}.`);
-  const tid = await takeInput("");
-  console.log(tid);
-  let el='';
-  let elInd='';
-  do {
-    el=this.tasks.filter(element => element.id==tid);
-    elInd=el.id;
-   if(elInd=='')
-    console.log(` there is no task id with id: ${tid} please enter valid task id`);
-} while (elInd!=='');
+  chooseMode = false;
+  console.log(
+    `Enter the id for the task which you want to change its statues ${funcType ==
+    "complete"
+      ? "to complete"
+      : ""}.`
+  );
 
-if(funcType=='change'){
-  console.log(`What new statues you want for it, choose ( 1 for Pending , 2 for Partialy Completed , 3 for Completed) `);
-  const newStat = await takeInput("");
-  console.log(newStat);
-  let prevStat= this.tasks[elInd].status;
-  this.tasks[elInd].status=newStat;
-} 
- else
-{
-  this.tasks[elInd].status= 3;
-  console.log(funcType=='complete'?`The statues for the task with ID: ${tid} (and with Name: ${this.tasks[elInd].name}) is Completed.` : `The statues for the task with ID: ${tid} (and with Name: ${this.tasks[elInd].name}) is now ${status[newStat]} instead of ${status[prevStat]} `);
-}
+  let el = "";
+  let elInd = "";
+
+ 
+  elInd =  await enterValidID(this.tasks);
+
+
+  if (funcType == "change") {
+    console.log(
+      `What new statues you want for it, choose ( 1 for Pending , 2 for Partialy Completed , 3 for Completed) `
+    );
+    const newStat = await takeInput("");
+ 
+    let prevStat = this.tasks[elInd].status;
+    this.tasks[elInd].status = newStat;
+  } else {
+    var vr = this.tasks;
+
+    this.tasks[elInd].status = 4;
+    console.log(
+      funcType == "complete"
+        ? `The statues for the task with ID: ${this
+          .tasks[elInd].id} and which Name is: ${this
+            .tasks[elInd].name} now the statues is Completed.`
+        : `The statues for the task with ID: ${tid} and which Name is ${this
+            .tasks[elInd].name} the statues now is ${status[newStat]} instead of ${status[
+            prevStat
+          ]} `
+    );
+  }
+  chooseMode = true;
 };
 
-TaskList.prototype.listCompletedTasks = async function() {
-  
-  let i=0;
-  this.tasks.reduce((i,e)=>(e.status==status.Completed?i+1:i),0);
+TaskList.prototype.deleteTask = async function(taskId) {
+  chooseMode = false;
+  console.log(`Enter the id for the task you want to delete .`);
+  let elInd = "";
 
-  console.log(i==0?`There are no taskes that are completed`:`There are ${i} tasks that they are completed. and here are the list of them :`);
-
-  this.tasks.forEach((element, ind) => {
-    if(element.status==status.Completed)
-    {
-      element.getTaskDetails();
-    }
-  });
-
+  elInd = await enterValidID(this.tasks);
+  if(elInd!=='')
+  {
+    let id=this.tasks[elInd].id;
+    let name=this.tasks[elInd].name;
+    this.tasks.splice(elInd, 1);
+    console.log(`
+    the task with ID: ${id} and which Name is: ${name} now is deleted`);
+  }
+  chooseMode = true;
 };
+
 
 TaskList.prototype.clearAllTasks = function() {
-  let noOfTasks= this.tasks.length;
-  this.tasks=[];
-  console.log(noOfTasks==0?`There was no tasks to clear.`:`There was ${noOfTasks} number of tasks ,and now they are all deleted.`);
+  let noOfTasks = this.tasks.length;
+  this.tasks = [];
+  console.log(
+    noOfTasks == 0
+      ? `There was no tasks to clear.`
+      : `There was ${noOfTasks} number of tasks ,and now they are all deleted now.`
+  );
 };
 
 TaskList.prototype.sortTasks = function(sortType, sortingDirection) {
-  
-  if(sortType=='dueDate')
-  {
-    this.tasks=sortingDirectionacs=='acs'? this.tasks.sort((a,b)=>toDate(a.dueDate)<toDate(b.dueDate)):this.tasks.sort((a,b)=>toDate(a.dueDate)>toDate(b.dueDate)) ;
-  } 
-  else if(sortType=='priority')
-  {
-    this.tasks=sortingDirectionacs=='acs'? this.tasks.sort((a,b)=>a.priority>b.priority):this.tasks.sort((a,b)=>a.priority<b.priority) ;
+  if (sortType == "dueDate") {
+    this.tasks =
+    sortingDirection == "acs"
+        ? this.tasks.sort((a, b) => toDate(a.dueDate) - toDate(b.dueDate))
+        : this.tasks.sort((a, b) => toDate(b.dueDate) - toDate(a.dueDate));
+  } else if (sortType == "priority") {
+    this.tasks =
+    sortingDirection == "acs"
+        ? this.tasks.sort((a, b) => parseInt(b.priority) - parseInt(a.priority))
+        : this.tasks.sort((a, b) => parseInt(a.priority) - parseInt(b.priority));
   }
-  
-  console.log(`All taskes are sorted according the ${sortType=='dueDate'?'Due Date':'Priority'} , and by ${sortingDirectionacs=='acs'?'Ascending':'Descending'} direction`);
+
+  console.log(
+    `All taskes are sorted according the ${sortType == "dueDate"
+      ? "Due Date"
+      : "Priority"} , and by ${sortingDirection == "acs"
+      ? "Ascending (from low to high)"
+      : "Descending (from high to low)"} direction`
+  );
 };
 
 // ====================================  End Code of Task and TaskList Prototypies ======================= //
@@ -319,7 +410,8 @@ function getLargestID(objects) {
 }
 
 function isValidDate(vr) {
-  let dateRegex = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+  // as any date between 1-1-2000 to 31-12-2099
+  let dateRegex = /^\d{1,2}\/\d{1,2}\/(20[0-9]{2}|2099)$/;
 
   if (dateRegex.test(vr)) {
     return true;
@@ -328,11 +420,50 @@ function isValidDate(vr) {
   }
 }
 
-function toDate(dString) {
-  const [day, month, year] = dString.split('/');
-  return new Date(year, month - 1, day);
+function isValidInput (inp) {
+  let wrdRegex = /\w{3,}/;
+
+  if (wrdRegex.test(inp)) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
+function toDate(dString) {
+  const [day, month, year] = dString.split("/");
+  return new Date(`${year}-${month}-${day}`).getTime();
+}
+
+async function  enterValidID(arOfObjects){
+  let elInd='';
+
+  
+  while (true) {
+    let tid = -1;
+    let elInd = '';
+  
+   
+      tid = await takeInput();
+   
+  
+      arOfObjects.forEach((element, ind) => {
+        if (element["id"] === parseInt(tid)) {
+          elInd = ind;
+          return;
+        }
+      });
+  
+
+  
+      if (elInd === '') {
+        console.log(`There is no task with ID: ${tid}. Please enter a valid task ID.`);
+      } else 
+      return elInd;
+  } 
+
+
+}
 // ====================================  End  of Helper Codes ======================= //
 
 // ====================================  Code that start the programe ======================= //
